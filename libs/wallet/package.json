@@ -1,0 +1,40 @@
+{
+  "name": "@cap/wallet",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": "./dist/index.js",
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./cli-utils": {
+      "import": "./dist/cli-utils/index.js",
+      "default": "./dist/cli-utils/index.js",
+      "types": "./dist/cli-utils/index.d.ts"
+    },
+    "./sdk-hd": {
+      "import": "./dist/sdk-hd/index.js",
+      "default": "./dist/sdk-hd/index.js",
+      "types": "./dist/sdk-hd/index.d.ts"
+    },
+    "./api": {
+      "import": "./dist/api/index.js",
+      "default": "./dist/api/index.js",
+      "types": "./dist/api/index.d.ts"
+    }
+  },
+  "dependencies": {
+    "@midnight-ntwrk/wallet": "^5.0.0",
+    "@midnight-ntwrk/zswap": "^4.0.0",
+    "@scure/bip32": "^2.0.1",
+    "@scure/bip39": "^2.0.1",
+    "rxjs": "^7.8.2",
+    "yargs": "^18.0.0"
+  }
+}

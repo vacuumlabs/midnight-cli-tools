@@ -1,0 +1,12 @@
+{
+  "name": "@cap/wallet-cli",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@midnight-ntwrk/wallet": "^5.0.0",
+    "@midnight-ntwrk/zswap": "^4.0.0",
+    "yargs": "^18.0.0"
+  }
+}

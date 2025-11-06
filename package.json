@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "scripts": {},
   "private": true,
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "workspaces": [
     "apps/**",
     "libs/**"
@@ -10,6 +13,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@types/node": "^24.10.0",
+    "@types/yargs": "^17.0.34",
     "eslint": "^9.39.1",
     "prettier": "^3.6.2",
     "ts-node": "^10.9.2",
