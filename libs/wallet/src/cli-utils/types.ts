@@ -12,5 +12,12 @@ export type WalletBuilderArgs = {
   indexerWsUrl: string;
   proverServerUrl: string;
   nodeUrl: string;
-  networkId: keyof typeof NetworkId;
 };
+
+export type WalletGenerationArgs = {
+  networkId: keyof typeof NetworkId;
+} & WalletBuilderArgs;
+
+export type WalletLoadingArgs = {
+  wallet: string,
+}

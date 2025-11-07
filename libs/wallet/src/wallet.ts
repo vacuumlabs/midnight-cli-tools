@@ -1,7 +1,9 @@
 import {WalletBuilder as MidnightWalletBuilder} from "@midnight-ntwrk/wallet";
-import {LogLevel, Resource, Wallet} from "./types.js";
 import {CoinInfo, NetworkId, Transaction} from "@midnight-ntwrk/zswap";
-import {lastValueFrom, Observable, takeWhile} from "rxjs";
+import fs from "node:fs/promises";
+import {firstValueFrom, lastValueFrom, Observable, takeWhile} from "rxjs";
+
+import {LogLevel, Resource, SerializableWallet, Wallet, WalletRunState} from "./types.js";
 import {
   WalletState,
   ProvingRecipe,
@@ -11,6 +13,10 @@ import {
   TokenTransfer,
   TransactionToProve
 } from "./api/types.js";
+import {AddressDerivationArgs, WalletBuilderArgs, WalletLoadingArgs} from "./cli-utils/index.js";
+import {deriveAddressSeedFromMnemonicWords} from "./utils.js";
+import {Roles} from "./sdk-hd/index.js";
+import {createHash} from "node:crypto";
 
 export class WalletBuilder {
   /**
@@ -24,7 +30,7 @@ export class WalletBuilder {
    * @param minLogLevel Only statements with this level and above will be logged
    * @param discardTxHistory If transaction history should be discarded or kept in memory - undefined will default to false
    */
-  static build(
+  static async build(
     indexerUri: string,
     indexerWsUri: string,
     proverServerUri: string,
@@ -43,39 +49,154 @@ export class WalletBuilder {
       networkId,
       minLogLevel,
       discardTxHistory
-    ).then((wallet) => new ExtendedWallet(wallet));
+    ).then((wallet) => new _InternalWallet(wallet, this.internalWalletId(seed)));
+  }
+
+  // ---
+  // Functionality extension
+  static async load(args: (WalletLoadingArgs & WalletBuilderArgs & AddressDerivationArgs)): Promise<ExtendedWallet> {
+    const fileContent = await fs.readFile(args.wallet, 'utf-8');
+    const loadedWalletData: SerializableWallet = JSON.parse(fileContent);
+    const seed = await deriveAddressSeedFromMnemonicWords(
+      loadedWalletData.mnemonics,
+      {
+        derived_account: args.account,
+        derived_role: Roles[args.addressRole],
+        derivation_index: args.index,
+      }
+    );
+
+    const baseWallet = await MidnightWalletBuilder.restore(
+      args.indexerUrl,
+      args.indexerWsUrl,
+      args.proverServerUrl,
+      args.nodeUrl,
+      seed,
+      loadedWalletData.state,
+    );
+
+    return new _InternalWallet(baseWallet, this.internalWalletId(seed));
+  }
+
+  private static internalWalletId(walletSeed: string): string {
+    return createHash('sha256').update(walletSeed).digest('hex');
   }
 }
 
 type ResourcedWallet = Resource & Wallet;
 
 export class ExtendedWallet implements Resource, Wallet {
-  midnightWallet: ResourcedWallet;
-  started: boolean = false;
+  readonly internalId: string;
 
-  constructor(wallet: ResourcedWallet) {
+  private midnightWallet: ResourcedWallet;
+  private _runState: WalletRunState = 'new';
+
+  protected constructor(wallet: ResourcedWallet, id: string) {
+    this.internalId = id;
     this.midnightWallet = wallet;
   }
 
-  // Extensions
+  get runState(): WalletRunState {
+    return this._runState;
+  }
+
+  // ---
+  // Functionality extensions
   /**
-   * Load fully synced state from internal state observer.
+   * Load fully synced state from internal state observer. This should be used only on
+   * `started` wallet.
+   *
+   * @throws
+   * `Error` when called on wallet, which `start` function was not called.
    *
    * @remarks
    * The state can & will de-sync on its own. This should be used in scenarios when the state
    * is used for direct processing or snapshotting. This value should not be used for caching.
    */
   syncedState(): Promise<WalletState> {
-    if (!this.started) {
-      throw new Error("Cannot await synced state on wallet, that did not start syncing");
-    }
+    this.assertState('syncing');
 
     return lastValueFrom(
       this.state().pipe(takeWhile((state) => !state.syncProgress?.synced, true))
     );
   }
 
-  // Implements
+  /**
+   * Load currently synced state from internal state observer. This is usable, even if wallet did not start syncing,
+   * even tho the returned state can be out-of-date. Some of the data is correct (like associated addresses).
+   */
+  currentState(): Promise<WalletState> {
+    return firstValueFrom(
+      this.state()
+    );
+  }
+
+  /**
+   * Serialize wallet into file on specified path.
+   * @param outputFile Path to the file to serialize wallet into.
+   * @param mnemonics Mnemonic words associated with this wallet. (Those are not stored directly in the wallet & are needed).
+   * @param override Override file, if it already exists.
+   */
+  async dumpToFile(outputFile: string, mnemonics?: string[], override: boolean = false): Promise<string> {
+    let path;
+    if (outputFile.endsWith('.wallet.json')) {
+      path = outputFile;
+    } else if (outputFile.endsWith('.json')) {
+      const len = outputFile.length;
+      const withoutExtension = outputFile.substring(0, len - '.json'.length);
+      path = `${withoutExtension}.wallet.json`
+    } else {
+      path = `${outputFile}.wallet.json`
+    }
+
+    // Check if file exists already
+    if (mnemonics != null && !override) {
+      let alreadyExists = false;
+
+      try {
+        // Check if file is visible to the process
+        await fs.access(path, fs.constants.F_OK);
+        alreadyExists = true;
+      } catch (error) {
+        const typedError: { code: string | undefined } = error as { code: string | undefined };
+
+        // 'ENOENT' - file does not exist. Everything else is some permission bullshit. and would be thrown during write.
+        if (typedError.code !== 'ENOENT') {
+          throw error;
+        }
+      }
+
+      if (alreadyExists) {
+        throw new Error(`Wallet '${path}' already exists`);
+      }
+    }
+
+    if (mnemonics == null) {
+      const fileContent = await fs.readFile(path, 'utf-8');
+      const loadedWalletData: SerializableWallet = JSON.parse(fileContent);
+      mnemonics = loadedWalletData.mnemonics;
+    }
+
+    let serializedState = await this.serializeState();
+    let serializableWallet: SerializableWallet = {
+      mnemonics,
+      state: serializedState,
+    };
+
+    await fs.writeFile(path, JSON.stringify(serializableWallet, null, 2));
+    return path;
+  }
+
+  // ---
+  // Private methods
+  private assertState(...expectedStates: [WalletRunState, ...WalletRunState[]]) {
+    if (!expectedStates.includes(this.runState)) {
+      throw new Error(`Available only for '${expectedStates.join(', ')}' wallet. Currently in '${this._runState}' state`);
+    }
+  }
+
+  // ---
+  // Interface Implementation
   state(): Observable<WalletState> {
     return this.midnightWallet.state();
   }
@@ -101,12 +222,22 @@ export class ExtendedWallet implements Resource, Wallet {
   }
 
   start(): void {
+    this.assertState('new');
     this.midnightWallet.start();
-    this.started = true;
+    this._runState = 'syncing';
   }
 
-  close(): Promise<void> {
-    return this.midnightWallet.close();
+  async close(): Promise<void> {
+    this.assertState('new', 'syncing');
+    this._runState = 'closing';
+    await this.midnightWallet.close();
+    this._runState = 'closed';
   }
+}
 
+
+class _InternalWallet extends ExtendedWallet {
+  constructor(wallet: ResourcedWallet, id: string) {
+    super(wallet, id);
+  }
 }

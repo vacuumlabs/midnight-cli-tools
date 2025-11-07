@@ -7,6 +7,8 @@
   "dependencies": {
     "@midnight-ntwrk/wallet": "^5.0.0",
     "@midnight-ntwrk/zswap": "^4.0.0",
+    "@types/blessed": "^0.1.25",
+    "blessed": "^0.1.81",
     "yargs": "^18.0.0"
   }
 }

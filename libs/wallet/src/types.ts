@@ -14,6 +14,14 @@ export type AddressDerivationConfig = {
   derivation_index?: number,
 }
 
+export type SerializableWallet = {
+  mnemonics: string[],
+  state: string,
+}
+
+export type WalletRunState = 'new' | 'syncing' | 'closing' | 'closed';
+
+// ---
 // Copy&Paste exports from '@midnight-ntwrk/wallet'
 export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 
