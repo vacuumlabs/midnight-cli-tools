@@ -24,7 +24,7 @@ export async function generateWallet(args: GenerateArgs) {
   const wallet = await WalletBuilder.build(
     args.indexerUrl,
     args.indexerWsUrl,
-    args.proverServerUrl,
+    args.proverUrl,
     args.nodeUrl,
     addressSeed,
     NetworkId[args.networkId]

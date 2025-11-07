@@ -65,11 +65,11 @@ export class WalletBuilder {
         derivation_index: args.index,
       }
     );
-
+    
     const baseWallet = await MidnightWalletBuilder.restore(
       args.indexerUrl,
       args.indexerWsUrl,
-      args.proverServerUrl,
+      args.proverUrl,
       args.nodeUrl,
       seed,
       loadedWalletData.state,

@@ -1,4 +1,4 @@
-import {AddressDerivationArgs, WalletBuilderArgs, WalletGenerationArgs, WalletLoadingArgs} from "@cap/wallet/cli-utils";
+import {AddressDerivationArgs, WalletGenerationArgs, WalletLoadingArgs} from "@cap/wallet/cli-utils";
 
 export type GenerateArgs = {
   output: string | undefined;
@@ -11,4 +11,10 @@ export type SyncArgs = {
   paths: (string | number)[] | undefined,
   allowUndefined: boolean | undefined,
   watch: boolean | undefined,
-} & WalletBuilderArgs & WalletLoadingArgs & AddressDerivationArgs;
+} & WalletLoadingArgs;
+
+export type TransferArgs = {
+  amount: string,
+  type: string,
+  receiver: string,
+} & WalletLoadingArgs;

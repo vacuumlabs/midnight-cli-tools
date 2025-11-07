@@ -64,7 +64,7 @@ export function extendWalletGenerationOptions<T>(
 }
 
 export function extendWalletLoadingOptions<T>(yargs: Argv<T>): Argv<T & WalletLoadingArgs> {
-  return yargs
+  return extendAddressDerivationOptions(extendWalletBuilderOptions(yargs))
     .option('wallet', {
       description: 'Path to serialized wallet info produced with `generate` command',
       type: "string",

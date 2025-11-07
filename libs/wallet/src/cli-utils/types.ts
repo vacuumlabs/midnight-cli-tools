@@ -10,7 +10,7 @@ export type AddressDerivationArgs = {
 export type WalletBuilderArgs = {
   indexerUrl: string;
   indexerWsUrl: string;
-  proverServerUrl: string;
+  proverUrl: string;
   nodeUrl: string;
 };
 
@@ -20,4 +20,4 @@ export type WalletGenerationArgs = {
 
 export type WalletLoadingArgs = {
   wallet: string,
-}
+} & WalletBuilderArgs & AddressDerivationArgs;
