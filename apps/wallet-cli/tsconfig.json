@@ -7,10 +7,10 @@
       "path": "./tsconfig.app.json"
     },
     {
-      "path": "../../libs/monkeypatch"
+      "path": "../../libs/*"
     },
     {
-      "path": "../../libs/wallet"
+      "path": "../../contracts/*"
     }
   ]
 }

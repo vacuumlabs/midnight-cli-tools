@@ -5,13 +5,12 @@ import '@cap/monkeypatch';
 import {
   extendAddressDerivationOptions,
   extendWalletGenerationOptions,
-  extendWalletLoadingOptions
+  extendWalletLoadingOptions,
 } from "@cap/wallet/cli-utils";
-import {generateWallet, syncWallet} from "./commands/index.js";
-import {transfer} from "./commands/transfer.js";
+import {generateWallet, syncWallet, transfer} from "./commands/index.js";
 import {nativeToken} from "@midnight-ntwrk/zswap";
 
-await yargs(hideBin(process.argv))
+yargs(hideBin(process.argv))
   // Generate wallet
   .command('generate', 'Generate new wallet', (yargs: Argv) => {
     return extendAddressDerivationOptions(extendWalletGenerationOptions(yargs))
@@ -55,7 +54,7 @@ await yargs(hideBin(process.argv))
       })
       .option('type', {
         alias: ['t'],
-        description: 'Type of coin that will be transfered',
+        description: 'Type of coin that will be transferred',
         type: 'string',
         default: nativeToken(),
       })
@@ -81,4 +80,4 @@ await yargs(hideBin(process.argv))
     }
   })
   .wrap(null)
-  .parseAsync();
+  .parse();

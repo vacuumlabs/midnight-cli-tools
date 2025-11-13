@@ -1,12 +1,14 @@
 # See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
-# wallet info
+# wallet & contract info
 *.wallet.json
+*.contract.json
 
 # compiled output
 dist
 tmp
 out-tsc
+compiled
 
 # dependencies
 node_modules
@@ -36,6 +38,7 @@ npm-debug.log
 yarn-error.log
 testem.log
 /typings
+midnight-level-db
 
 # System Files
 .DS_Store

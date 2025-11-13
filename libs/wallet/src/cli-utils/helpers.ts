@@ -1,9 +1,14 @@
 import {Argv} from 'yargs';
-import {AddressDerivationArgs, WalletBuilderArgs, WalletGenerationArgs, WalletLoadingArgs} from "./types.js";
+import {
+  AddressDerivationArgs,
+  WalletBuilderArgs,
+  WalletGenerationArgs,
+  WalletLoadingArgs
+} from "./types.js";
 import {Roles} from "../sdk-hd/index.js";
 import {NetworkId} from "@midnight-ntwrk/zswap";
 
-function listEnumVariantNames<T>(enumType: any): string[] {
+export function listEnumVariantNames(enumType: any): string[] {
   return Object.keys(enumType)
     .map((key) => enumType[key])
     .filter((value) => typeof value === 'string');
@@ -31,7 +36,7 @@ export function extendAddressDerivationOptions<T>(
     }) as unknown as Argv<T & AddressDerivationArgs>;
 }
 
-export function extendWalletBuilderOptions<T>(
+export function extendWalletBuildingOptions<T>(
   yargs: Argv<T>
 ): Argv<T & WalletBuilderArgs> {
   return yargs
@@ -56,7 +61,7 @@ export function extendWalletBuilderOptions<T>(
 export function extendWalletGenerationOptions<T>(
   yargs: Argv<T>
 ): Argv<T & WalletGenerationArgs> {
-  return extendWalletBuilderOptions(yargs.option('network-id', {
+  return extendWalletBuildingOptions(yargs.option('network-id', {
     description: 'Type of network',
     choices: listEnumVariantNames(NetworkId),
     default: 'TestNet',
@@ -64,7 +69,7 @@ export function extendWalletGenerationOptions<T>(
 }
 
 export function extendWalletLoadingOptions<T>(yargs: Argv<T>): Argv<T & WalletLoadingArgs> {
-  return extendAddressDerivationOptions(extendWalletBuilderOptions(yargs))
+  return extendAddressDerivationOptions(extendWalletBuildingOptions(yargs))
     .option('wallet', {
       description: 'Path to serialized wallet info produced with `generate` command',
       type: "string",

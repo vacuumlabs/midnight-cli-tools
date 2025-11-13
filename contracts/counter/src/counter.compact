@@ -1,0 +1,15 @@
+pragma language_version >= 0.18;
+
+import CompactStandardLibrary;
+
+// public state
+export ledger round: Counter;
+
+// transition function changing public state
+export circuit increment(): [] {
+  round.increment(1);
+}
+
+constructor(initialCounterValue: Uint<16>) {
+  round.increment(disclose(initialCounterValue));
+}

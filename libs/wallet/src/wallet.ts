@@ -1,6 +1,22 @@
 import {WalletBuilder as MidnightWalletBuilder} from "@midnight-ntwrk/wallet";
-import {CoinInfo, NetworkId, Transaction} from "@midnight-ntwrk/zswap";
-import fs from "node:fs/promises";
+import {CoinInfo, NetworkId, Transaction as ZswapTransaction} from "@midnight-ntwrk/zswap";
+import {ContractProviders} from "@midnight-ntwrk/midnight-js-contracts";
+import {TransactionId, Transaction as LedgerTransaction} from "@midnight-ntwrk/ledger";
+import {indexerPublicDataProvider} from "@midnight-ntwrk/midnight-js-indexer-public-data-provider";
+import {levelPrivateStateProvider} from "@midnight-ntwrk/midnight-js-level-private-state-provider";
+import {NodeZkConfigProvider} from "@midnight-ntwrk/midnight-js-node-zk-config-provider";
+import {httpClientProofProvider} from "@midnight-ntwrk/midnight-js-http-client-proof-provider";
+import {getLedgerNetworkId, getZswapNetworkId} from "@midnight-ntwrk/midnight-js-network-id";
+
+import {
+  WalletProvider,
+  MidnightProvider,
+  UnbalancedTransaction,
+  BalancedTransaction,
+  createBalancedTx
+} from "@midnight-ntwrk/midnight-js-types";
+
+import * as fs from "node:fs/promises";
 import {firstValueFrom, lastValueFrom, Observable, takeWhile} from "rxjs";
 
 import {LogLevel, Resource, SerializableWallet, Wallet, WalletRunState} from "./types.js";
@@ -12,7 +28,7 @@ import {
   TransactionIdentifier,
   TokenTransfer,
   TransactionToProve
-} from "./api/types.js";
+} from "./api/index.js";
 import {AddressDerivationArgs, WalletBuilderArgs, WalletLoadingArgs} from "./cli-utils/index.js";
 import {deriveAddressSeedFromMnemonicWords} from "./utils.js";
 import {Roles} from "./sdk-hd/index.js";
@@ -65,7 +81,7 @@ export class WalletBuilder {
         derivation_index: args.index,
       }
     );
-    
+
     const baseWallet = await MidnightWalletBuilder.restore(
       args.indexerUrl,
       args.indexerWsUrl,
@@ -129,6 +145,54 @@ export class ExtendedWallet implements Resource, Wallet {
     return firstValueFrom(
       this.state()
     );
+  }
+
+  async buildWalletProvider(): Promise<WalletProvider & MidnightProvider> {
+    const wallet = this;
+    const state = await wallet.currentState();
+    return {
+      coinPublicKey: state.coinPublicKey,
+      encryptionPublicKey: state.encryptionPublicKey,
+      balanceTx(ledgerTransaction: UnbalancedTransaction, newCoins: CoinInfo[]): Promise<BalancedTransaction> {
+        wallet.assertState('syncing');
+
+        return wallet.balanceTransaction(
+          ZswapTransaction.deserialize(ledgerTransaction.serialize(getLedgerNetworkId()), getZswapNetworkId()),
+          newCoins
+        )
+          .then((tx) => wallet.proveTransaction(tx))
+          .then((zswapTx) => LedgerTransaction.deserialize(zswapTx.serialize(getZswapNetworkId()), getLedgerNetworkId()))
+          .then(createBalancedTx);
+      },
+      submitTx(tx: BalancedTransaction): Promise<TransactionId> {
+        wallet.assertState('syncing');
+
+        return wallet.submitTransaction(tx);
+      }
+    };
+  }
+
+  async buildContractProviders(
+    pathToContract: string,
+    {
+      indexerUrl,
+      indexerWsUrl,
+      proverUrl,
+    }: WalletBuilderArgs
+  ): Promise<ContractProviders> {
+    const walletProvider = await this.buildWalletProvider();
+
+    return {
+      privateStateProvider: levelPrivateStateProvider(),
+      publicDataProvider: indexerPublicDataProvider(
+        indexerUrl,
+        indexerWsUrl
+      ),
+      zkConfigProvider: new NodeZkConfigProvider(pathToContract),
+      proofProvider: httpClientProofProvider(proverUrl),
+      walletProvider: walletProvider,
+      midnightProvider: walletProvider,
+    };
   }
 
   /**
@@ -201,15 +265,15 @@ export class ExtendedWallet implements Resource, Wallet {
     return this.midnightWallet.state();
   }
 
-  proveTransaction(recipe: ProvingRecipe): Promise<Transaction> {
+  proveTransaction(recipe: ProvingRecipe): Promise<ZswapTransaction> {
     return this.midnightWallet.proveTransaction(recipe);
   }
 
-  balanceTransaction(tx: Transaction, newCoins: CoinInfo[]): Promise<BalanceTransactionToProve | NothingToProve> {
+  balanceTransaction(tx: ZswapTransaction, newCoins: CoinInfo[]): Promise<BalanceTransactionToProve | NothingToProve> {
     return this.midnightWallet.balanceTransaction(tx, newCoins);
   }
 
-  submitTransaction(tx: Transaction): Promise<TransactionIdentifier> {
+  submitTransaction(tx: ZswapTransaction): Promise<TransactionIdentifier> {
     return this.midnightWallet.submitTransaction(tx);
   }
 

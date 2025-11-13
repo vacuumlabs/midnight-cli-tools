@@ -8,6 +8,7 @@
   },
   "workspaces": [
     "apps/**",
+    "contracts/**",
     "libs/**"
   ],
   "devDependencies": {
