@@ -4,6 +4,7 @@ export type GenerateArgs = {
   output: string | undefined;
   override: boolean | undefined;
   mnemonics: (string | number)[] | undefined;
+  seed: string | undefined;
 } & AddressDerivationArgs & WalletBuilderArgs;
 
 export type SyncArgs = {

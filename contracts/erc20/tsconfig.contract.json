@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "types": ["node"],
+    "rootDir": "src",
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+  },
+  "include": ["src/**/*.*ts"]
+}

@@ -16,6 +16,11 @@ yargs(hideBin(process.argv))
     return extendWalletBuildingOptions(extendAddressDerivationOptions(
       yargs
         .array('mnemonics')
+        .option('seed', {
+          alias: ['s'],
+          type: 'string',
+          description: 'seed to generate wallet with'
+        })
         .option('output', {
           alias: ['o'],
           type: 'string',

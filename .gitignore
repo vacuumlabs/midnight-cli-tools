@@ -2,7 +2,6 @@
 
 # wallet & contract info
 *.wallet.json
-*.contract.json
 
 # compiled output
 dist

@@ -12,15 +12,22 @@ import {WalletAddresses} from "@cap/wallet/api";
 import {NetworkId} from "@midnight-ntwrk/zswap";
 
 export async function generateWallet(args: GenerateArgs) {
-  const mnemonicsWords = args.mnemonics?.map((value) => value.toString()) || generateMnemonicWords();
-  const addressSeed = await deriveAddressSeedFromMnemonicWords(
-    mnemonicsWords,
-    {
-      derived_account: args.account,
-      derived_role: Roles[args.addressRole],
-      derivation_index: args.index,
-    }
-  );
+  let addressSeed;
+  let mnemonicsWords;
+
+  if (args.seed != null) {
+    addressSeed = args.seed;
+  } else {
+    mnemonicsWords = args.mnemonics?.map((value) => value.toString()) || generateMnemonicWords();
+    addressSeed = await deriveAddressSeedFromMnemonicWords(
+      mnemonicsWords,
+      {
+        derived_account: args.account,
+        derived_role: Roles[args.addressRole],
+        derivation_index: args.index,
+      }
+    );
+  }
 
   const wallet = await WalletBuilder.build(
     args.indexerUrl,
@@ -38,7 +45,7 @@ export async function generateWallet(args: GenerateArgs) {
   }
 }
 
-async function printState(wallet: ExtendedWallet, mnemonics: string[]) {
+async function printState(wallet: ExtendedWallet, mnemonics?: string[]) {
   let syncedState = await wallet.currentState();
   let printableState: WalletAddresses = {
     address: syncedState.address,
@@ -47,7 +54,7 @@ async function printState(wallet: ExtendedWallet, mnemonics: string[]) {
   };
 
   console.log({
-    mnemonics,
+    mnemonics: mnemonics ?? [],
     state: printableState
   });
 }
