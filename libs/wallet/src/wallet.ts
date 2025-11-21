@@ -30,9 +30,6 @@ import {
   TransactionToProve
 } from "./api/index.js";
 import {AddressDerivationArgs, WalletBuilderArgs, WalletLoadingArgs} from "./cli-utils/index.js";
-import {deriveAddressSeedFromMnemonicWords} from "./utils.js";
-import {Roles} from "./sdk-hd/index.js";
-import {createHash} from "node:crypto";
 
 export class WalletBuilder {
   /**
@@ -65,7 +62,7 @@ export class WalletBuilder {
       networkId,
       minLogLevel,
       discardTxHistory
-    ).then((wallet) => new _InternalWallet(wallet, this.internalWalletId(seed)));
+    ).then((wallet) => new _InternalWallet(wallet, seed));
   }
 
   // ---
@@ -73,42 +70,30 @@ export class WalletBuilder {
   static async load(args: (WalletLoadingArgs & WalletBuilderArgs & AddressDerivationArgs)): Promise<ExtendedWallet> {
     const fileContent = await fs.readFile(args.wallet, 'utf-8');
     const loadedWalletData: SerializableWallet = JSON.parse(fileContent);
-    const seed = await deriveAddressSeedFromMnemonicWords(
-      loadedWalletData.mnemonics,
-      {
-        derived_account: args.account,
-        derived_role: Roles[args.addressRole],
-        derivation_index: args.index,
-      }
-    );
 
     const baseWallet = await MidnightWalletBuilder.restore(
       args.indexerUrl,
       args.indexerWsUrl,
       args.proverUrl,
       args.nodeUrl,
-      seed,
+      loadedWalletData.seed,
       loadedWalletData.state,
     );
 
-    return new _InternalWallet(baseWallet, this.internalWalletId(seed));
-  }
-
-  private static internalWalletId(walletSeed: string): string {
-    return createHash('sha256').update(walletSeed).digest('hex');
+    return new _InternalWallet(baseWallet, loadedWalletData.seed);
   }
 }
 
 type ResourcedWallet = Resource & Wallet;
 
 export class ExtendedWallet implements Resource, Wallet {
-  readonly internalId: string;
+  readonly seed: string;
 
   private midnightWallet: ResourcedWallet;
   private _runState: WalletRunState = 'new';
 
-  protected constructor(wallet: ResourcedWallet, id: string) {
-    this.internalId = id;
+  protected constructor(wallet: ResourcedWallet, seed: string) {
+    this.seed = seed;
     this.midnightWallet = wallet;
   }
 
@@ -244,6 +229,7 @@ export class ExtendedWallet implements Resource, Wallet {
     let serializedState = await this.serializeState();
     let serializableWallet: SerializableWallet = {
       mnemonics,
+      seed: this.seed,
       state: serializedState,
     };
 
@@ -301,7 +287,7 @@ export class ExtendedWallet implements Resource, Wallet {
 
 
 class _InternalWallet extends ExtendedWallet {
-  constructor(wallet: ResourcedWallet, id: string) {
-    super(wallet, id);
+  constructor(wallet: ResourcedWallet, seed: string) {
+    super(wallet, seed);
   }
 }

@@ -4,6 +4,8 @@ import {WalletBuilder} from "@cap/wallet";
 export async function transfer(args: TransferArgs) {
   const wallet = await WalletBuilder.load(args);
   wallet.start();
+  // Wait till wallet gets synced. Otherwise, transaction fails on insufficient balances.
+  await wallet.syncedState()
 
   try {
     const transferRecipe = await wallet.transferTransaction([

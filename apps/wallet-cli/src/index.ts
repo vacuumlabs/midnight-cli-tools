@@ -4,7 +4,7 @@ import yargs, {Argv} from 'yargs';
 import '@cap/monkeypatch';
 import {
   extendAddressDerivationOptions,
-  extendWalletGenerationOptions,
+  extendWalletBuildingOptions,
   extendWalletLoadingOptions,
 } from "@cap/wallet/cli-utils";
 import {generateWallet, syncWallet, transfer} from "./commands/index.js";
@@ -13,19 +13,20 @@ import {nativeToken} from "@midnight-ntwrk/zswap";
 yargs(hideBin(process.argv))
   // Generate wallet
   .command('generate', 'Generate new wallet', (yargs: Argv) => {
-    return extendAddressDerivationOptions(extendWalletGenerationOptions(yargs))
-      .array('mnemonics')
-      .option('output', {
-        alias: ['o'],
-        type: 'string',
-        description: 'path where to save newly generated wallet',
-      })
-      .option('override', {
-        alias: ['x'],
-        type: 'boolean',
-        description: 'flag to override existing wallet, if file on `--output` already exists',
-      })
-      .strictOptions();
+    return extendWalletBuildingOptions(extendAddressDerivationOptions(
+      yargs
+        .array('mnemonics')
+        .option('output', {
+          alias: ['o'],
+          type: 'string',
+          description: 'path where to save newly generated wallet',
+        })
+        .option('override', {
+          alias: ['x'],
+          type: 'boolean',
+          description: 'flag to override existing wallet, if file on `--output` already exists',
+        })
+    ));
   }, generateWallet)
 
   // Synchronize wallet
@@ -65,6 +66,7 @@ yargs(hideBin(process.argv))
       })
       .demandOption(['amount', 'receiver']);
   }, transfer)
+  .env('CAP')
 
   // --
   .strictCommands()
@@ -73,7 +75,6 @@ yargs(hideBin(process.argv))
     if (err == null) {
       console.error(msg);
     } else {
-      err.stack = '';
       console.dir(err, {
         depth: null,
       })

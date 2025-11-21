@@ -15,7 +15,8 @@ export type AddressDerivationConfig = {
 }
 
 export type SerializableWallet = {
-  mnemonics: string[],
+  mnemonics?: string[],
+  seed: string,
   state: string,
 }
 

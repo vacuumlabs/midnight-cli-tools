@@ -14,10 +14,6 @@ export async function interact(args: InteractArgs): Promise<void> {
 
   const initialPrivateState = args.privateState ?? restoredContract.contract.initialPrivateState;
 
-  console.log("Searching for deployed contract", {
-    address: restoredContract.contractAddress
-  })
-
   const foundDeployedContract = await findDeployedContract(contractProviders as any, {
     contractAddress: restoredContract.contractAddress,
     contract: restoredContract.contract.instance as Contract,
@@ -34,20 +30,23 @@ export async function interact(args: InteractArgs): Promise<void> {
     });
   }
 
-  console.log("Parsing args", {
-    args: args.arguments
-  });
   const constructorArgs = await evaluateWithExtensions(args.arguments);
+
   console.log("Calling circuit", {
     circuitName: args.circuit,
-    circuit: circuitTxConstructor,
     args: constructorArgs,
+    privateState: toPrintableLedgerState(initialPrivateState),
   });
   const tx = await circuitTxConstructor(...constructorArgs);
-  console.log(tx);
-  console.log(toPrintableLedgerState(initialPrivateState));
 
-  // TODO: Finish this.
+  console.log("Transaction finished", {
+    result: tx.private?.result,
+    status: tx.public.status,
+    txId: tx.public.txId,
+    txHash: tx.public.txHash,
+    blockHeight: tx.public.blockHeight,
+    blockHash: tx.public.blockHash,
+  });
 
   wallet.close();
 }

@@ -3,8 +3,6 @@ import {ArgumentsCamelCase, Argv} from "yargs";
 import {PrivateStateArgs, RestoreDeployedContractArgs} from "./types.js";
 import {SupportedModule} from "../loadedContracts.js";
 
-import {NetworkId} from "@midnight-ntwrk/midnight-js-network-id";
-
 export function listEnumVariantNames(enumType: any): string[] {
   return Object.keys(enumType)
     .map((key) => enumType[key])
@@ -63,19 +61,14 @@ export function extendPrivateStateOptions<T>(yargs: Argv<T>): Argv<T & PrivateSt
 
 export function extendRestoreContractOptions<T>(yargs: Argv<T>): Argv<T & RestoreDeployedContractArgs> {
   return extendPrivateStateOptions(yargs
-    .option("module-name", {
+    .option("module", {
       description: "Module name of deployed contract",
       type: "string",
       choices: listEnumVariantNames(SupportedModule)
     })
-    .option("contract-address", {
+    .option("address", {
       description: "Address of deployed contract",
       type: "string",
-    })
-    .option("network-id", {
-      description: "Network type on which the contract was deployed",
-      type: "string",
-      choices: listEnumVariantNames(NetworkId),
     })
     .option("contract", {
       description: "Path to serialized deployed contract information",
@@ -83,7 +76,7 @@ export function extendRestoreContractOptions<T>(yargs: Argv<T>): Argv<T & Restor
     })
     .check(argv => {
       const hasContractPath = argv.contract != null;
-      const hasModuleInfo = argv.module != null && argv.contractAddress != null && argv.networkId != null;
+      const hasModuleInfo = argv.module != null && argv.address != null;
 
       if (hasContractPath && hasModuleInfo) {
         throw new Error("Both contract path and module information options provided, only one can be used");

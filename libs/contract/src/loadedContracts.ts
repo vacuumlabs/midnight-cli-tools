@@ -86,7 +86,7 @@ export const loadedContracts = {
   [SupportedModule.BulletinBoard]: LoadedContract.create(
     SupportedModule.BulletinBoard,
     {
-      secretKey: randomBytes(32),
+      localSecretKey: randomBytes(32),
     }
   ),
   [SupportedModule.Counter]: LoadedContract.create(

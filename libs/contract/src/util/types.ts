@@ -1,5 +1,5 @@
 import {LoadedContract, loadedContracts, SupportedModule} from "../loadedContracts.js";
-import {NetworkId} from "@midnight-ntwrk/midnight-js-network-id";
+import {getNetworkId, NetworkId} from "@midnight-ntwrk/midnight-js-network-id";
 import {ContractProviders} from "@midnight-ntwrk/midnight-js-contracts";
 import asyncFs from "node:fs/promises";
 import {RestoreDeployedContractArgs} from "../cli-utils/index.js";
@@ -21,10 +21,10 @@ export class RestoredContract {
   readonly networkId: NetworkId;
   readonly privateState: any | undefined;
 
-  constructor(contract: LoadedContract<any>, contractAddress: string, networkId: NetworkId, privateState?: any) {
+  constructor(contract: LoadedContract<any>, contractAddress: string, networkId?: NetworkId, privateState?: any) {
     this.contract = contract;
     this.contractAddress = contractAddress;
-    this.networkId = networkId;
+    this.networkId = networkId ?? getNetworkId();
     this.privateState = privateState;
   }
 
@@ -108,7 +108,7 @@ export class RestoredContract {
     } else {
       const contract = loadedContracts[args.module];
 
-      return new RestoredContract(contract, args.contractAddress, args.networkId);
+      return new RestoredContract(contract, args.address, undefined, args.privateState);
     }
   }
 }

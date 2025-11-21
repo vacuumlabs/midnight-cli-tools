@@ -1,5 +1,5 @@
 import {Roles} from "../sdk-hd/index.js";
-import {NetworkId} from "@midnight-ntwrk/zswap";
+import {NetworkId} from "@midnight-ntwrk/midnight-js-network-id";
 
 export type AddressDerivationArgs = {
   account: number;
@@ -12,11 +12,8 @@ export type WalletBuilderArgs = {
   indexerWsUrl: string;
   proverUrl: string;
   nodeUrl: string;
+  networkId: NetworkId,
 };
-
-export type WalletGenerationArgs = {
-  networkId: keyof typeof NetworkId;
-} & WalletBuilderArgs;
 
 export type WalletLoadingArgs = {
   wallet: string,

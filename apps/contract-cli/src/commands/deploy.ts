@@ -1,17 +1,15 @@
 import {WalletBuilder} from '@cap/wallet';
 
 import {deployContract} from '@midnight-ntwrk/midnight-js-contracts';
-import {NetworkId, setNetworkId} from '@midnight-ntwrk/midnight-js-network-id';
+import {
+  getNetworkId,
+} from '@midnight-ntwrk/midnight-js-network-id';
 
 import {DeployContractArgs} from '../types.js';
 import {loadedContracts, RestoredContract} from "@cap/contract";
 
 
 export async function deploy(args: DeployContractArgs) {
-  const networkId = NetworkId.TestNet;
-  // TODO: Figure out networkId from loaded wallet.
-  setNetworkId(networkId);
-
   const wallet = await WalletBuilder.load(args);
   wallet.start();
 
@@ -23,6 +21,7 @@ export async function deploy(args: DeployContractArgs) {
 
   console.log('Deploying contract', {
     contractDir: loadedContract.contractBaseDir,
+    networkId: getNetworkId(),
   });
 
   const deployedContract = await deployContract(contractProviders, {
@@ -33,14 +32,14 @@ export async function deploy(args: DeployContractArgs) {
   });
 
   console.log('Contract deployed', {
-    networkId,
+    networkId: getNetworkId(),
     contractModule: args.module,
     contractAddress: deployedContract.deployTxData.public.contractAddress,
     privateState: initialPrivateState,
   });
 
   if (args.output != null) {
-    const contract = new RestoredContract(loadedContract, deployedContract.deployTxData.public.contractAddress, networkId, initialPrivateState);
+    const contract = new RestoredContract(loadedContract, deployedContract.deployTxData.public.contractAddress, getNetworkId(), initialPrivateState);
     const path = await contract.dumpToFile(args.output, args.override);
     console.log('Contract stored', {
       path

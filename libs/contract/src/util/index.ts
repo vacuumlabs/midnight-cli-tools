@@ -14,6 +14,10 @@ export function fromHex(hex: string): Uint8Array {
 export function toPrintableLedgerState(rawLedger: any): any {
   let printable: Record<string, any> = {};
 
+  if (rawLedger == null) {
+    return rawLedger;
+  }
+
   for (const property of Object.getOwnPropertyNames(rawLedger)) {
     if (property === "__wbg_ptr") {
       // Observing WASM bindgen pointer. These thing have no informational value. Just strip them out.

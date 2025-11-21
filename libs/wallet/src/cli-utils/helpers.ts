@@ -2,11 +2,13 @@ import {Argv} from 'yargs';
 import {
   AddressDerivationArgs,
   WalletBuilderArgs,
-  WalletGenerationArgs,
   WalletLoadingArgs
 } from "./types.js";
 import {Roles} from "../sdk-hd/index.js";
-import {NetworkId} from "@midnight-ntwrk/zswap";
+import {
+  NetworkId as MidnightNetworkId,
+  setNetworkId
+} from "@midnight-ntwrk/midnight-js-network-id";
 
 export function listEnumVariantNames(enumType: any): string[] {
   return Object.keys(enumType)
@@ -55,17 +57,16 @@ export function extendWalletBuildingOptions<T>(
     .option('node-url', {
       description: 'URL to the Midnight Node',
       default: 'https://rpc.testnet-02.midnight.network',
+    })
+    .option('network-id', {
+      description: 'Type of network to which wallet belongs to',
+      type: 'string',
+      choices: listEnumVariantNames(MidnightNetworkId),
+      default: MidnightNetworkId.TestNet
+    })
+    .middleware((args) => {
+      setNetworkId(args.networkId as MidnightNetworkId);
     }) as unknown as Argv<T & WalletBuilderArgs>;
-}
-
-export function extendWalletGenerationOptions<T>(
-  yargs: Argv<T>
-): Argv<T & WalletGenerationArgs> {
-  return extendWalletBuildingOptions(yargs.option('network-id', {
-    description: 'Type of network',
-    choices: listEnumVariantNames(NetworkId),
-    default: 'TestNet',
-  })) as unknown as Argv<T & WalletGenerationArgs>;
 }
 
 export function extendWalletLoadingOptions<T>(yargs: Argv<T>): Argv<T & WalletLoadingArgs> {

@@ -6,6 +6,7 @@ import {
   WalletBuilder
 } from "@cap/wallet";
 import {generateMnemonicWords, Roles} from "@cap/wallet/sdk-hd";
+
 import {WalletAddresses} from "@cap/wallet/api";
 
 import {NetworkId} from "@midnight-ntwrk/zswap";
