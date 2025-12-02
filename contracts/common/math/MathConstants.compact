@@ -1,0 +1,24 @@
+/// Bunch of defined constant to reduce amount of inlined constants in the actual smart contracts.
+pragma language_version >= 0.18.0 && < 0.19.0;
+
+module MathConstants {
+  export circuit Uint8_MAX(): Uint<8> {
+    return 255;
+  }
+
+  export circuit Uint16_MAX(): Uint<16> {
+    return 65535;
+  }
+
+  export circuit Uint32_MAX(): Uint<32> {
+    return 4294967295;
+  }
+
+  export circuit Uint64_MAX(): Uint<64> {
+    return 18446744073709551615;
+  }
+
+  export circuit Uint128_MAX(): Uint<128> {
+    return 340282366920938463463374607431768211455;
+  }
+}

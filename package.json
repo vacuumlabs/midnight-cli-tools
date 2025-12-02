@@ -1,7 +1,6 @@
 {
   "name": "@cap/source",
   "version": "0.1.0",
-  "scripts": {},
   "private": true,
   "engines": {
     "node": ">=20.19.0"
@@ -11,6 +10,19 @@
     "contracts/**",
     "libs/**"
   ],
+  "scripts": {
+    "wallet-cli": "npx tsx apps/wallet-cli",
+    "sa-wallet-cli": "dotenv -e standalone.env -- npm run wallet-cli --",
+    "contract-cli": "npx tsx apps/contract-cli",
+    "sa-contract-cli": "dotenv -e standalone.env -- npm run contract-cli --",
+    "vesting-cli": "npx tsx apps/vesting-cli",
+    "sa-vesting-cli": "dotenv -e standalone.env -- npm run vesting-cli --",
+    "create-standalone-genesis-wallet": "npm run sa-wallet-cli -- generate -o genesis.sa -s '000000000000000000000000000000000000000000000000000000000000001'",
+    "build": "npm run build-contracts && npm run build-libs",
+    "build-contracts": "npm -w contracts/bulletin-board run build && npm -w contracts/common run build && npm -w contracts/common run build && npm -w contracts/counter run build && npm -w contracts/vest run build",
+    "build-libs": "tsc -b libs/*",
+    "watch-libs": "tsc -b libs/* --watch"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@types/node": "^24.10.0",

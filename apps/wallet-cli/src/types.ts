@@ -11,6 +11,7 @@ export type SyncArgs = {
   paths: (string | number)[] | undefined,
   allowUndefined: boolean | undefined,
   watch: boolean | undefined,
+  noSync: boolean | undefined,
 } & WalletLoadingArgs;
 
 export type TransferArgs = {

@@ -24,6 +24,9 @@
       "types": "./dist/cli-utils/index.d.ts"
     }
   },
+  "scripts": {
+    "build": "tsc -b ."
+  },
   "dependencies": {
     "@midnight-ntwrk/compact-runtime": "^0.9.0",
     "@midnight-ntwrk/ledger": "^4.0.0",
@@ -39,6 +42,7 @@
     "@midnight-ntwrk/zswap": "^4.0.0",
     "@scure/bip32": "^2.0.1",
     "@scure/bip39": "^2.0.1",
+    "bech32": "^2.0.0",
     "rxjs": "^7.8.2",
     "ts-morph": "^27.0.2",
     "typescript": "^5.9.3",

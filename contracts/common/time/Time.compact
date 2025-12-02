@@ -1,0 +1,104 @@
+/// Library providing helpers, when working with time.
+///
+/// WARNING: There is observable bug in the compact, that calling `kernel.blockTimeLessThan` with timestamp that is
+///          close to real block time, will **BRICK** the deployed contract. DO NOT USE IN PRODUCTION !!!
+pragma language_version >= 0.18.0 && < 0.19.0;
+
+module Time {
+  import CompactStandardLibrary;
+  import "../math/MathConstants";
+  import "../math/Math"<64> prefix Math_;
+
+  ledger timePrecision: Uint<64>;
+
+  /**
+  * Witness from client, producing current timestamp. This is not validated in any way, and should not be trusted.
+  * For this reason use `now`.
+  */
+  export witness secondsFromUnixEpoch_unsafe(): Uint<64>;
+
+  /**
+  * Initialization for the module. This *must* be called in contract constructor, which want to use the Time module.
+  */
+  export circuit init(timePrecision_: Uint<64>): [] {
+    timePrecision = disclose(timePrecision_);
+  }
+
+  /**
+  * Get timestamp representing time within time precision bounds. This circuit disclose the value from
+  * `secondsFromUnixEpoch_unsafe`.
+  *
+  * NOTE: The validation is omitted, due to a SDK bug. DO NOT USE IN PRODUCTION !!!
+  */
+  export circuit now(): Uint<64> {
+    return disclose(secondsFromUnixEpoch_unsafe());
+  }
+
+  /**
+  * This is actual circuit, that should be used. Unfortunately, while there is a bug with `kernel.blockTimeLessThan`
+  * present, calling this method will either:
+  *
+  * 1. Fail to prove.
+  * 2. Bricks the deployed contract.
+  */
+  circuit bricked_now(): Uint<64> {
+    const ts = disclose(secondsFromUnixEpoch_unsafe());
+
+    // Edge-case hell. While the integers cannot overflow. The `as` casting works like `assert`, and just checks,
+    // that value is in the defined range. Thus, needing to check all additions and for overflows anyway.
+    //
+    // Being overly pessimistic with bounds while resolving edge-case, is just opinionated subjective choice, to
+    // to have consistent edge-case handling, and prevent first branch to accept any user input.
+    if (ts + timePrecision > Uint64_MAX()) {
+      if (timePrecision > ts) {
+        assertCurrentTimeInRange(ts, ts);
+      } else {
+        assertCurrentTimeInRange(ts - timePrecision, ts);
+      }
+    } else {
+      if (timePrecision > ts) {
+        assertCurrentTimeInRange(ts, (ts + timePrecision) as Uint<64>);
+      } else {
+        assertCurrentTimeInRange(ts - timePrecision, (ts + timePrecision) as Uint<64>);
+      }
+    }
+
+    return ts;
+  }
+
+  /**
+   * First attempts to `now` without needing a witness.
+   *
+   * NOTE: This is stupid.
+   *
+   * It tries to calculate `now` by placing bits in the number.
+   * Starting with the most significant bit, you are either setting it to 0 or 1, depending if the resulting
+   * timestamp is bigger or smaller to a guessing number. There are no variables, so it is required to abuse `fold`
+   * to be able to mutate the `currentNow` and `power` in place, instead of having a on-chain ledger value for them.
+   */
+  export circuit bricking_witnessless_now(): Uint<64> {
+    const [now, _] = fold(([currentNow, power], _) => {
+      const [newPower, _] = Math_divMod(power, 2);
+      const candidate = (currentNow + power) as Uint<64>;
+      if (blockTimeGte(candidate)) {
+        return [candidate, newPower];
+      } else {
+        return [currentNow, newPower];
+      }
+    }, [
+      // Starting guess
+      0 as Uint<64>,
+      // Most significant bit: 1 << 63
+      9223372036854775808 as Uint<64>
+    ], default<Vector<64, Uint<1>>>);
+
+    return now;
+  }
+
+  //===
+  // Helpers
+  circuit assertCurrentTimeInRange(lowerBound: Uint<64>, upperBound: Uint<64>): [] {
+    assert(!kernel.blockTimeLessThan(lowerBound), "Time: Provided timestamp is older than set precision in comparison to current timestamp");
+    assert(!kernel.blockTimeGreaterThan(upperBound), "Time: Provided timestamp is newer than set precision in comparison to current timestamp");
+  }
+}

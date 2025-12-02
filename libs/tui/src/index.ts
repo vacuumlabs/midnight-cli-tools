@@ -84,7 +84,7 @@ export function runWatchMode(
   })
 }
 
-function resolvePaths(obj: any, paths: (string | number)[] | undefined, allowUndefined: boolean): any {
+export function resolvePaths(obj: any, paths: (string | number)[] | undefined, allowUndefined: boolean): any {
   if (paths == null || paths.length === 0) {
     return obj;
   }

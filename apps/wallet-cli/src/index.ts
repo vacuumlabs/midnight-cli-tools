@@ -47,6 +47,10 @@ yargs(hideBin(process.argv))
         alias: ['w'],
         type: 'boolean',
         description: 'Run sync in watch mode, awaiting changed in the wallet state',
+      })
+      .option('no-sync', {
+        type: 'boolean',
+        description: 'Run sync without actually syncing the state. Should be used, when querying always available info, like addresses',
       });
   }, syncWallet)
 

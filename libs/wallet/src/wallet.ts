@@ -13,7 +13,7 @@ import {
   MidnightProvider,
   UnbalancedTransaction,
   BalancedTransaction,
-  createBalancedTx
+  createBalancedTx, Contract
 } from "@midnight-ntwrk/midnight-js-types";
 
 import * as fs from "node:fs/promises";
@@ -157,14 +157,14 @@ export class ExtendedWallet implements Resource, Wallet {
     };
   }
 
-  async buildContractProviders(
+  async buildContractProviders<TContract extends Contract = Contract>(
     pathToContract: string,
     {
       indexerUrl,
       indexerWsUrl,
       proverUrl,
     }: WalletBuilderArgs
-  ): Promise<ContractProviders> {
+  ): Promise<ContractProviders<TContract>> {
     const walletProvider = await this.buildWalletProvider();
 
     return {
@@ -218,12 +218,6 @@ export class ExtendedWallet implements Resource, Wallet {
       if (alreadyExists) {
         throw new Error(`Wallet '${path}' already exists`);
       }
-    }
-
-    if (mnemonics == null) {
-      const fileContent = await fs.readFile(path, 'utf-8');
-      const loadedWalletData: SerializableWallet = JSON.parse(fileContent);
-      mnemonics = loadedWalletData.mnemonics;
     }
 
     let serializedState = await this.serializeState();

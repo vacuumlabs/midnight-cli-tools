@@ -1,0 +1,30 @@
+/// Extensions of supported math with witnesses.
+pragma language_version >= 0.18.0 && < 0.19.0;
+
+module Math<#n> {
+  export witness divMod_unsafe(x: Uint<n>, y: Uint<n>): [Uint<n>, Uint<n>];
+
+  export circuit divMod(dividend: Uint<n>, divisor: Uint<n>): [Uint<n>, Uint<n>] {
+    assert(divisor != 0, "Math: Division by zero");
+    const [quotient, remainder] = disclose(divMod_unsafe(dividend, divisor));
+    assert(remainder < divisor, "Math: Remainder error");
+    assert(((quotient as Field) * divisor) + remainder == dividend as Field, "Math: Division does not match");
+    return [quotient, remainder];
+  }
+
+  export circuit max(a: Uint<n>, b: Uint<n>): Uint<n> {
+    if (a > b) {
+      return a;
+    } else {
+      return b;
+    }
+  }
+
+  export circuit min(a: Uint<n>, b: Uint<n>): Uint<n> {
+    if (a > b) {
+      return b;
+    } else {
+      return a;
+    }
+  }
+}

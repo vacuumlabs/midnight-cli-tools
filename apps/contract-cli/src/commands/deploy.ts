@@ -12,6 +12,7 @@ import {loadedContracts, RestoredContract} from "@cap/contract";
 export async function deploy(args: DeployContractArgs) {
   const wallet = await WalletBuilder.load(args);
   wallet.start();
+  await wallet.syncedState();
 
   const loadedContract = loadedContracts[args.module];
 

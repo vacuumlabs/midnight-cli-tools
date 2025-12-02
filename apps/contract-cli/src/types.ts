@@ -8,9 +8,9 @@ export type DeployContractArgs = {
   override: boolean | undefined;
 } & WalletLoadingArgs & PrivateStateArgs;
 
-
 export type ObserveContractArgs = {
-  watch: boolean | undefined
+  watch: boolean | undefined,
+  raw: boolean | undefined,
 } & WalletLoadingArgs & RestoreDeployedContractArgs;
 
 export type InteractArgs = {

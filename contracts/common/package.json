@@ -1,0 +1,30 @@
+{
+  "name": "@cap/common-contracts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    "./time": {
+      "types": "./dist/time/index.d.ts",
+      "require": "./dist/time/index.js",
+      "import": "./dist/time/index.js",
+      "default": "./dist/time/index.js"
+    },
+    "./math": {
+      "types": "./dist/math/index.d.ts",
+      "require": "./dist/math/index.js",
+      "import": "./dist/math/index.js",
+      "default": "./dist/math/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b ."
+  },
+  "dependencies": {
+    "zod": "^4.1.12"
+  }
+}

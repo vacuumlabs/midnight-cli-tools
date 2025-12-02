@@ -34,6 +34,10 @@ yargs(hideBin(process.argv))
   }, deploy)
   .command('observe', 'Observe public state of deployed contract', (yargs: Argv) => {
     return extendWalletLoadingOptions(extendRestoreContractOptions(yargs
+      .option('raw', {
+        type: 'boolean',
+        describe: 'Skip ledger deserialization, printing the raw state'
+      })
       .option('watch', {
         type: 'boolean',
         describe: 'Stream changes of contract state',

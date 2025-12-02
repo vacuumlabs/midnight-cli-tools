@@ -8,6 +8,7 @@ import {findDeployedContract} from "@midnight-ntwrk/midnight-js-contracts";
 export async function interact(args: InteractArgs): Promise<void> {
   const wallet = await WalletBuilder.load(args);
   wallet.start();
+  await wallet.syncedState();
 
   const restoredContract = await RestoredContract.load(args);
   const contractProviders = await wallet.buildContractProviders(restoredContract.contract.contractBaseDir, args);
@@ -29,7 +30,7 @@ export async function interact(args: InteractArgs): Promise<void> {
       }
     });
   }
-
+  
   const constructorArgs = await evaluateWithExtensions(args.arguments);
 
   console.log("Calling circuit", {

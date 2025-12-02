@@ -1,5 +1,5 @@
 {
-  "name": "@cap/erc-20-contract",
+  "name": "@cap/vesting-contract",
   "version": "1.0.0",
   "private": true,
   "type": "commonjs",
@@ -16,7 +16,7 @@
     }
   },
   "scripts": {
-    "compact": "compact compile src/bulletin-board.compact src/compiled",
+    "compact": "compact compile +0.26.0 src/Index.compact src/compiled",
     "build": "tsc -b . && npm run compact && cp -r src/compiled ./dist/"
   },
   "dependencies": {

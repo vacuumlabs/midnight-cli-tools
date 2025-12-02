@@ -1,0 +1,3 @@
+[submodule "midnight-proof-server"]
+	path = midnight-proof-server
+	url = https://github.com/bricktowers/midnight-proof-server

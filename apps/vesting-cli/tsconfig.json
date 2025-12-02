@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "../../libs/contract"
+    },
+    {
+      "path": "../../libs/monkeypatch"
+    },
+    {
+      "path": "../../libs/tui"
+    },
+    {
+      "path": "../../libs/wallet"
+    }
+  ]
+}

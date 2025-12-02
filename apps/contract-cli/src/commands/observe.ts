@@ -16,11 +16,15 @@ export async function observe(args: ObserveContractArgs) {
   const contractProviders = await wallet.buildContractProviders(restoredContract.contract.contractBaseDir, args);
 
   if (args.watch) {
-    const observableState = restoredContract.getObservablePublicState(contractProviders, true);
-    runWatchMode(wallet, observableState);
+    const observable = args.raw
+      ? restoredContract.getObservableContractState(contractProviders, true)
+      : restoredContract.getObservableLedger(contractProviders, true);
+    runWatchMode(wallet, observable);
   } else {
-    const publicState= await restoredContract.getPublicState(contractProviders);
-    console.log(toPrintableLedgerState(publicState));
+    const state = args.raw
+      ? (await restoredContract.getFullStateRepresentation(contractProviders))
+      : toPrintableLedgerState(await restoredContract.getLedger(contractProviders));
+    console.log(state);
     wallet.close();
   }
 }

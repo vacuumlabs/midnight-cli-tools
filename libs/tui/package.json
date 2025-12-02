@@ -14,6 +14,9 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "scripts": {
+    "build": "tsc -b ."
+  },
   "dependencies": {
     "@midnight-ntwrk/compact-runtime": "^0.9.0",
     "@midnight-ntwrk/ledger": "^4.0.0",

@@ -1,0 +1,141 @@
+pragma language_version >= 0.18.0 && < 0.19.0;
+
+import CompactStandardLibrary;
+
+// Biggest integer that would be produces is when amount is multiplied by elapsed time, what is multiplication of
+// Uint<128> and Uint<64>. This produces Uint<192>, and thus require bitrange for the Math module.
+//
+// NOTE: If optimizing for fees, it might be a good idea to import this multiple times for specific bitranges
+//       to remove some of the `as Uint<...>` conversions (which are just asserts).
+import "../../common/math/Math"<192> prefix Math_;
+import "../../common/time/Time" prefix Time_;
+
+export struct Vest {
+  id: Bytes<32>,
+  beneficiary: Either<ZswapCoinPublicKey, ContractAddress>,
+  start: Uint<64>,
+  end: Uint<64>,
+  amount: Uint<128>,
+}
+
+export struct VestmentInfo {
+  claimableAmount: Uint<128>,
+  totalAmount: Uint<128>,
+  start: Uint<64>,
+  end: Uint<64>,
+  vestingCoin: QualifiedCoinInfo,
+  beneficiary: Either<ZswapCoinPublicKey, ContractAddress>,
+}
+
+ledger _vestingCoins: Map<Bytes<32>, QualifiedCoinInfo>;
+ledger _vestments: Map<Bytes<32>, Vest>;
+ledger _counter: Counter;
+ledger _baseNonce: Bytes<32>;
+
+constructor() {
+  Time_init(5);
+  _baseNonce = kernel.self().bytes;
+}
+
+/*
+* Create new vestment for specific beneficiary
+*/
+export circuit createVestment(coin_: CoinInfo, duration_seconds_: Uint<64>, beneficiary_: Either<ZswapCoinPublicKey, ContractAddress>): Bytes<32> {
+//  const start = disclose(Time_secondsFromUnixEpoch_unsafe());
+//  const start = Time_now();
+  const start = Time_bricking_witnessless_now();
+
+  // TODO: Try to make this non-disclosing
+  const duration_seconds = disclose(duration_seconds_);
+  const coin = disclose(coin_);
+  const beneficiary = disclose(beneficiary_);
+  //  assert(beneficiary != ownPublicKey(), "Vesting: Cannot create vestment for yourself");
+
+  // assert(start > (18446744073709551615 - duration_seconds), "Vesting: Duration too long. Would overflow max timestamp");
+  const end = (start + duration_seconds) as Uint<64>;
+
+  receive(coin);
+  _counter.increment(1);
+  const vestmentId = evolveNonce(_counter, _baseNonce);
+  const vest = Vest {
+    id: vestmentId,
+    beneficiary: beneficiary,
+    start: start,
+    end: end,
+    amount: coin.value
+  };
+
+  _vestments.insert(vestmentId, vest);
+  _vestingCoins.insertCoin(vestmentId, coin, right<ZswapCoinPublicKey, ContractAddress>(kernel.self()));
+
+  return vestmentId;
+}
+
+/**
+* Query currently claimable amount for this vestment.
+* Also return the qualified coin info, currently vesting coin.
+*/
+export circuit vestmentInfo(vestmentId: Bytes<32>): VestmentInfo {
+//  const currentTime = disclose(Time_secondsFromUnixEpoch_unsafe());
+//  const currentTime = Time_now();
+  const currentTime = Time_bricking_witnessless_now();
+  const [vest, vestingCoin] = loadVestmentData(vestmentId);
+  const elapsed = currentTime - vest.start;
+  const duration = vest.end - vest.start;
+  const [vested_Uint192, _] = Math_divMod(vest.amount * elapsed, duration);
+
+  // vested_* <= vest.amount => Must fit into same type.
+  const vested = Math_min(vested_Uint192, vest.amount) as Uint<128>;
+  const claimed = vest.amount - vestingCoin.value;
+
+  return VestmentInfo {
+    claimableAmount: vested - claimed,
+    totalAmount: vest.amount,
+    start: vest.start,
+    end: vest.end,
+    vestingCoin: vestingCoin,
+    beneficiary: vest.beneficiary,
+  };
+}
+
+/**
+* Claim all vested coins.
+*/
+export circuit claim(vestmentId_: Bytes<32>): [Uint<128>, Maybe<Uint<128>>] {
+//  const currentTime = disclose(Time_secondsFromUnixEpoch_unsafe());
+//  const currentTime = Time_now();
+  const currentTime = Time_bricking_witnessless_now();
+  const vestmentId = disclose(vestmentId_);
+  const info = vestmentInfo(vestmentId);
+
+  assert(info.beneficiary.is_left, "Vesting: Contract cross-calls not yet implemented");
+  assert(info.beneficiary.left == ownPublicKey(), "Vesting: Only beneficiary can claim coins");
+
+  const result = send(info.vestingCoin, info.beneficiary, info.claimableAmount);
+
+  const hasChange = result.change.is_some && result.change.value.value > 0;
+  if (hasChange) {
+     receive(result.change.value);
+    _vestingCoins.insertCoin(vestmentId, result.change.value, right<ZswapCoinPublicKey, ContractAddress>(kernel.self()));
+  } else {
+    _vestingCoins.remove(vestmentId);
+    _vestments.remove(vestmentId);
+  }
+
+  if (hasChange) {
+    return [result.sent.value, some<Uint<128>>(result.change.value.value)];
+  } else {
+    return [result.sent.value, none<Uint<128>>()];
+  }
+}
+
+circuit loadVestmentData(vestmentId_: Bytes<32>): [Vest, QualifiedCoinInfo] {
+  const vestmentId = disclose(vestmentId_);
+  assert(_vestments.member(vestmentId), "Vesting: unknown vestment id");
+  assert(_vestingCoins.member(vestmentId), "Vesting: unknown vestment id");
+
+  return [
+    _vestments.lookup(vestmentId),
+    _vestingCoins.lookup(vestmentId),
+  ];
+}

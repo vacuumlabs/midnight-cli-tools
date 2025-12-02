@@ -1,16 +1,16 @@
 import {SupportedModule} from "../loadedContracts.js";
 
 export type PrivateStateArgs = {
-  privateState: any | undefined,
+  privateState?: any,
 }
 
 export type RebuildContractArgs = {
-  module: SupportedModule;
-  address: string;
+  module?: SupportedModule;
+  address?: string;
 }
 
 export type LoadContractArgs = {
-  contract: string;
+  contract?: string;
 };
 
 export type RestoreDeployedContractArgs = RebuildContractArgs & LoadContractArgs & PrivateStateArgs;

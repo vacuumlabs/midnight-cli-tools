@@ -1,7 +1,7 @@
 import {SyncArgs} from "../types.js";
 import {WalletBuilder} from "@cap/wallet";
 
-import {runWatchMode} from "@cap/tui";
+import {runWatchMode, resolvePaths} from "@cap/tui";
 
 export async function syncWallet(args: SyncArgs) {
   let wallet = await WalletBuilder.load(args);
@@ -10,10 +10,11 @@ export async function syncWallet(args: SyncArgs) {
   if (args.watch) {
     runWatchMode(wallet, wallet.state(), args.paths);
   } else {
-    let syncedState = await wallet.syncedState();
-    console.dir(syncedState, {
+    const syncedState = await wallet.syncedState();
+    console.dir(resolvePaths(syncedState, args.paths, args.allowUndefined ?? true), {
       depth: null,
     });
+
     wallet.close();
   }
 }
