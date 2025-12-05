@@ -6,7 +6,7 @@ import {
 } from '@midnight-ntwrk/midnight-js-network-id';
 
 import {DeployContractArgs} from '../types.js';
-import {loadedContracts, RestoredContract} from "@cap/contract";
+import {loadedContracts, RestoredContract, toPrintableLedgerState} from "@cap/contract";
 
 
 export async function deploy(args: DeployContractArgs) {
@@ -36,7 +36,7 @@ export async function deploy(args: DeployContractArgs) {
     networkId: getNetworkId(),
     contractModule: args.module,
     contractAddress: deployedContract.deployTxData.public.contractAddress,
-    privateState: initialPrivateState,
+    privateState: toPrintableLedgerState(initialPrivateState),
   });
 
   if (args.output != null) {

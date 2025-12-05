@@ -41,9 +41,8 @@ constructor() {
 * Create new vestment for specific beneficiary
 */
 export circuit createVestment(coin_: CoinInfo, duration_seconds_: Uint<64>, beneficiary_: Either<ZswapCoinPublicKey, ContractAddress>): Bytes<32> {
-//  const start = disclose(Time_secondsFromUnixEpoch_unsafe());
-//  const start = Time_now();
-  const start = Time_bricking_witnessless_now();
+  // const start = Time_now();
+  const start = disclose(Time_secondsFromUnixEpoch_unsafe());
 
   // TODO: Try to make this non-disclosing
   const duration_seconds = disclose(duration_seconds_);
@@ -76,9 +75,8 @@ export circuit createVestment(coin_: CoinInfo, duration_seconds_: Uint<64>, bene
 * Also return the qualified coin info, currently vesting coin.
 */
 export circuit vestmentInfo(vestmentId: Bytes<32>): VestmentInfo {
-//  const currentTime = disclose(Time_secondsFromUnixEpoch_unsafe());
-//  const currentTime = Time_now();
-  const currentTime = Time_bricking_witnessless_now();
+  // const currentTime = Time_now();
+  const currentTime = disclose(Time_secondsFromUnixEpoch_unsafe());
   const [vest, vestingCoin] = loadVestmentData(vestmentId);
   const elapsed = currentTime - vest.start;
   const duration = vest.end - vest.start;
@@ -102,9 +100,8 @@ export circuit vestmentInfo(vestmentId: Bytes<32>): VestmentInfo {
 * Claim all vested coins.
 */
 export circuit claim(vestmentId_: Bytes<32>): [Uint<128>, Maybe<Uint<128>>] {
-//  const currentTime = disclose(Time_secondsFromUnixEpoch_unsafe());
-//  const currentTime = Time_now();
-  const currentTime = Time_bricking_witnessless_now();
+  // const currentTime = Time_now();
+  const currentTime = disclose(Time_secondsFromUnixEpoch_unsafe());
   const vestmentId = disclose(vestmentId_);
   const info = vestmentInfo(vestmentId);
 

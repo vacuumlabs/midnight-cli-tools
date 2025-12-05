@@ -41,11 +41,11 @@ export async function generateWallet(args: GenerateArgs) {
   if (args.output != null) {
     await wallet.dumpToFile(args.output, mnemonicsWords, args.override);
   } else {
-    await printState(wallet, mnemonicsWords);
+    await printState(wallet, mnemonicsWords ?? [], addressSeed);
   }
 }
 
-async function printState(wallet: ExtendedWallet, mnemonics?: string[]) {
+async function printState(wallet: ExtendedWallet, mnemonics: string[], addressSeed: string,) {
   let syncedState = await wallet.currentState();
   let printableState: WalletAddresses = {
     address: syncedState.address,
@@ -55,6 +55,7 @@ async function printState(wallet: ExtendedWallet, mnemonics?: string[]) {
 
   console.log({
     mnemonics: mnemonics ?? [],
+    seed: addressSeed,
     state: printableState
   });
 }
