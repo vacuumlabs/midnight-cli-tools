@@ -65,7 +65,7 @@ yargs(hideBin(process.argv))
     if (msg) {
       console.log(msg);
     } else {
-      // err.stack = ''
+      err.stack = ''
       console.dir(err, {
         depth: null
       });

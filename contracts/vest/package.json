@@ -17,7 +17,7 @@
   },
   "scripts": {
     "compact": "compact compile +0.26.0 src/Index.compact src/compiled",
-    "build": "tsc -b . && npm run compact && cp -r src/compiled ./dist/"
+    "build": "tsc -b . && npm run compact && cp -rf src/compiled ./dist"
   },
   "dependencies": {
     "zod": "^4.1.12"

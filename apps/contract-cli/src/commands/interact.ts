@@ -30,7 +30,7 @@ export async function interact(args: InteractArgs): Promise<void> {
       }
     });
   }
-  
+
   const constructorArgs = await evaluateWithExtensions(args.arguments);
 
   console.log("Calling circuit", {

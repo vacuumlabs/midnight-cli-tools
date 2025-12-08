@@ -8,6 +8,7 @@ import CompactStandardLibrary;
 // NOTE: If optimizing for fees, it might be a good idea to import this multiple times for specific bitranges
 //       to remove some of the `as Uint<...>` conversions (which are just asserts).
 import "../../common/math/Math"<192> prefix Math_;
+import "../../common/math/MathConstants";
 import "../../common/time/Time" prefix Time_;
 
 export struct Vest {
@@ -48,9 +49,9 @@ export circuit createVestment(coin_: CoinInfo, duration_seconds_: Uint<64>, bene
   const duration_seconds = disclose(duration_seconds_);
   const coin = disclose(coin_);
   const beneficiary = disclose(beneficiary_);
-  //  assert(beneficiary != ownPublicKey(), "Vesting: Cannot create vestment for yourself");
+  assert(beneficiary != ownPublicKey(), "Vesting: Cannot create vestment for yourself");
 
-  // assert(start > (18446744073709551615 - duration_seconds), "Vesting: Duration too long. Would overflow max timestamp");
+  assert(start > (Uint64_MAX() - duration_seconds), "Vesting: Duration too long. Would overflow max timestamp");
   const end = (start + duration_seconds) as Uint<64>;
 
   receive(coin);

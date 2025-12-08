@@ -17,7 +17,7 @@
   },
   "scripts": {
     "compact": "compact compile src/counter.compact src/compiled",
-    "build": "npm run compact & cp -r src/compiled dist/compiled"
+    "build": "npm run compact && cp -rf src/compiled ./dist/"
   },
   "dependencies": {
     "zod": "^4.1.12"
