@@ -1,0 +1,43 @@
+pragma language_version >= 0.18.0 && < 0.19.0;
+
+import CompactStandardLibrary;
+
+/// --- Witness => Selective Disclosure. This data will never be stored on-chain.
+witness votingKey(): Bytes<4>;
+witness findVotingKey(votingKey: Bytes<4>): MerkleTreePath<2, Bytes<4>>;
+
+/// --- Public ledger => Everyone can see this.
+// Limiting the number of voters to 10 => log2(4) == 2
+export ledger authorizedVoters: MerkleTree<2, Bytes<4>>;
+export ledger usedVotesNullifiers: Set<Bytes<32>>;
+export ledger voted: Counter;
+export ledger votedYes: Counter;
+
+constructor(authorizedVotingKeys: Vector<4, Bytes<4>>) {
+  for (const authorizedVotingKey of authorizedVotingKeys) {
+    authorizedVoters.insert(disclose(authorizedVotingKey));
+  }
+}
+
+export circuit voteYes(): [] {
+  vote();
+  votedYes.increment(1);
+}
+
+export circuit voteNo(): [] {
+  vote();
+}
+
+circuit vote(): [] {
+  const vkPath = findVotingKey(votingKey());
+  const pathRoot = merkleTreePathRoot<2, Bytes<4>>(disclose(vkPath));
+  assert(authorizedVoters.checkRoot(pathRoot), "Vote: Not authorized");
+
+  const nullifier = persistentHash<Bytes<4>>(disclose(votingKey()));
+  assert(!usedVotesNullifiers.member(nullifier), "Vote: Voting key already used");
+  usedVotesNullifiers.insert(nullifier);
+
+  voted.increment(1);
+}
+
+

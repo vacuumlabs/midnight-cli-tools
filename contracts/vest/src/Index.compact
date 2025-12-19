@@ -49,7 +49,7 @@ export circuit createVestment(coin_: CoinInfo, duration_seconds_: Uint<64>, bene
   const duration_seconds = disclose(duration_seconds_);
   const coin = disclose(coin_);
   const beneficiary = disclose(beneficiary_);
-  assert(beneficiary != ownPublicKey(), "Vesting: Cannot create vestment for yourself");
+  assert(beneficiary != left<ZswapCoinPublicKey,ContractAddress>(ownPublicKey()), "Vesting: Cannot create vestment for yourself");
 
   assert(start > (Uint64_MAX() - duration_seconds), "Vesting: Duration too long. Would overflow max timestamp");
   const end = (start + duration_seconds) as Uint<64>;

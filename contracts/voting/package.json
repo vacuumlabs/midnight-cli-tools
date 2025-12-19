@@ -1,0 +1,25 @@
+{
+  "name": "@cap/voting-contract",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    "./compiled": {
+      "types": "./dist/compiled/contract/index.d.ts",
+      "require": "./dist/compiled/contract/index.cjs",
+      "import": "./dist/compiled/contract/index.cjs",
+      "default": "./dist/compiled/contract/index.cjs"
+    }
+  },
+  "scripts": {
+    "compact": "compact compile +0.26.0 src/Index.compact src/compiled",
+    "build": "tsc -b . && npm run compact && cp -rf src/compiled ./dist"
+  },
+  "dependencies": {
+    "zod": "^4.1.12"
+  }
+}

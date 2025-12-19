@@ -117,7 +117,7 @@ export class RestoredContract<TSupportedModule extends SupportedModule = any, TP
     asPrintable?: boolean,
     config?: ContractStateObservableConfig
   ): Observable<any> {
-    return contractProviders.publicDataProvider.contractStateObservable(this.contractAddress, config ?? {type: 'latest'})
+    return contractProviders.publicDataProvider.contractStateObservable(this.contractAddress, config ?? {type: 'all'})
       .pipe(map((cState) => {
         let value = this.contract.module.ledger(cState.data);
         if (asPrintable) {
@@ -127,14 +127,12 @@ export class RestoredContract<TSupportedModule extends SupportedModule = any, TP
       }));
   }
 
-  public async getFullStateRepresentation(contractProviders: ContractProviders, config?: BlockHeightConfig | BlockHashConfig): Promise<{
-    zswapState: string,
-    contractState: string,
-  }> {
-    let [zswapState, contractState] = (await contractProviders.publicDataProvider.queryZSwapAndContractState(this.contractAddress, config))!;
+  public async getFullStateRepresentation(contractProviders: ContractProviders, config?: BlockHeightConfig | BlockHashConfig): Promise<object> {
+    let [_, contractState] = (await contractProviders.publicDataProvider.queryZSwapAndContractState(this.contractAddress, config))!;
     return {
-      zswapState: zswapState.toString(true),
-      contractState: contractState.toString(true),
+      // zswapState: zswapState.toString(true),
+      contractStateSerialized: contractState.toString(true),
+      contractStateRaw: Buffer.from(contractState.serialize(0)).toString('hex'),
     }
   }
 
@@ -143,7 +141,7 @@ export class RestoredContract<TSupportedModule extends SupportedModule = any, TP
   }
 
   public getObservableContractState<T extends boolean | undefined>(contractProviders: ContractProviders, asPrintable?: T, config?: BlockHeightConfig | BlockHashConfig): Observable<ContractState | string> {
-    return contractProviders.publicDataProvider.contractStateObservable(this.contractAddress, config ?? {type: 'latest'})
+    return contractProviders.publicDataProvider.contractStateObservable(this.contractAddress, config ?? {type: 'all'})
       .pipe(map((state) => {
         if (asPrintable) {
           return state.data.toString(true);

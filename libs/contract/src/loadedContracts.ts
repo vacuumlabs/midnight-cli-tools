@@ -1,11 +1,15 @@
 import * as BulletinBoard from "@cap/bulletin-board-contract/compiled";
 import * as Counter from "@cap/counter-contract/compiled";
 import * as Vesting from "@cap/vesting-contract/compiled";
+import * as Test from "@cap/test-contract/compiled";
+import * as Vote from "@cap/voting-contract/compiled";
 import {createRequire} from "node:module";
 import path from "node:path";
 import {Contract, InitialStateParameters, Witnesses} from "@midnight-ntwrk/midnight-js-types";
 import {privateStateForwardingWitnesses} from "@cap/contract";
 import {randomBytes} from "@cap/contract";
+import {MerkleTreePath, WitnessContext} from "@midnight-ntwrk/compact-runtime";
+import {fromHex} from "./util/index.js";
 
 const require = createRequire(import.meta.url);
 
@@ -87,18 +91,23 @@ export enum SupportedModule {
   BulletinBoard = '@cap/bulletin-board-contract/compiled',
   Counter = '@cap/counter-contract/compiled',
   VestingContract = '@cap/vesting-contract/compiled',
+  TestContract = '@cap/test-contract/compiled',
+  VotingContract = '@cap/voting-contract/compiled',
 }
 
 export const loadedModules = {
   [SupportedModule.BulletinBoard]: BulletinBoard,
   [SupportedModule.Counter]: Counter,
   [SupportedModule.VestingContract]: Vesting,
+  [SupportedModule.TestContract]: Test,
+  [SupportedModule.VotingContract]: Vote,
 };
 
 export const loadedContractConstructors = {
   [SupportedModule.BulletinBoard]: BulletinBoard.Contract,
   [SupportedModule.Counter]: Counter.Contract,
   [SupportedModule.VestingContract]: Vesting.Contract,
+  [SupportedModule.VotingContract]: Vote.Contract,
 }
 
 export const loadedContracts = {
@@ -119,4 +128,37 @@ export const loadedContracts = {
     SupportedModule.VestingContract,
     {}
   ),
+  [SupportedModule.TestContract]: LoadedContract.create(
+    SupportedModule.TestContract,
+    {}
+  ),
+  [SupportedModule.VotingContract]: LoadedContract.create(
+    SupportedModule.VotingContract,
+    {},
+    {
+      stateParams: [[
+        fromHex("DEADBEEF"),
+        fromHex("DECAFBAD"),
+        fromHex("8FA1AFE1"),
+        fromHex("F00DF00D"),
+      ]],
+      customWitnesses: {
+        findVotingKey(context: WitnessContext<Vote.Ledger, any>, votingKey: Uint8Array): [any, MerkleTreePath<Uint8Array>] {
+          const path = context.ledger.authorizedVoters.findPathForLeaf(votingKey);
+          if (path == null) {
+            throw new Error("Not authorized voting key", {
+              cause: {
+                votingKey
+              }
+            });
+          }
+
+          return [
+            context.privateState,
+            path,
+          ];
+        }
+      }
+    }
+  )
 };

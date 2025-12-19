@@ -4,7 +4,8 @@ export * from "./forwarding-witnesses.js";
 export * from "./types.js";
 
 import {bech32m} from 'bech32';
-import {encodeCoinPublicKey} from "@midnight-ntwrk/ledger";
+import {createCoinInfo, encodeCoinInfo, encodeCoinPublicKey, nativeToken, TokenType} from "@midnight-ntwrk/ledger";
+import {EncodedCoinInfo} from "@midnight-ntwrk/compact-runtime";
 
 type Bytes<N extends number> = Uint8Array<{byteLength: N} & ArrayBuffer>
 
@@ -52,6 +53,11 @@ export function toHex(value: ArrayLike<number>): string {
 
 export function epochToDate(epoch: bigint): Date {
   return new Date(Number(epoch) * 1000);
+}
+
+export function coin(value: bigint, tokenType: TokenType = nativeToken()): EncodedCoinInfo {
+  const coinInfo = createCoinInfo(tokenType, value);
+  return encodeCoinInfo(coinInfo);
 }
 
 export function argToBigInt(argValue: number): bigint {
