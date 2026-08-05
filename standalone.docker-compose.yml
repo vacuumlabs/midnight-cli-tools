@@ -1,6 +1,6 @@
 services:
   proof-server:
-    container_name: 'counter-proof-server'
+    container_name: 'proof-server'
     image: "midnight-proof-server:prebaked"
     ports:
       - "6300:6300"

@@ -1,4 +1,4 @@
-# Crypto Academy Project
+# Midnight CLI Tools
 
 This repository is a compendium of tools, libs and contracts, used to learn more about the midnight network.
 Tools and utilities are primarily targeted for easier development and debugging the contracts and work with midnight network,
@@ -10,8 +10,8 @@ Code is structured in such way, to expose each concept individually, allowing qu
 
 Clone the repo, while initializing the submodules:
 ```bash
-$ git clone --recurse-submodules git@github.com:a-kyras/cap.git
-$ git clone --recurse-submodules https://github.com/a-kyras/cap.git
+$ git clone --recurse-submodules https://github.com/vacuumlabs/midnight-cli-tools.git
+$ git clone --recurse-submodules git@github.com:vacuumlabs/midnight-cli-tools.git
 ```
 
 If you already cloned the repo, but without submodules, you can initialize them with:
@@ -39,7 +39,7 @@ Tooling allowing to work with a Midnight wallet from the command line. Allowing 
 functionality, allowing CLI scripting and convenience. Read more [here](./apps/wallet-cli/README.md).
 
 ### contract-cli
-Tooling aggregating common contract operations. Currently supports only pre-compiled contract stored in the [contract lib](./libs/contract/README.md).
+Tooling aggregating common contract operations. Currently supports only pre-compiled contract stored in the [contract lib](./libs/contract/src/loadedContracts.ts).
 More info about supported commands [here](./apps/contract-cli/README.md).
 
 ### vesting-cli
